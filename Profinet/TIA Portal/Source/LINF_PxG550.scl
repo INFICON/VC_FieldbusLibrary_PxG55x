@@ -1,0 +1,1542 @@
+﻿TYPE "LInf_type_PCG550"
+VERSION : 0.1
+   STRUCT
+      AcyclicReadData : Struct
+         SensorValueCDG : Real;
+         ReadingValidCDG : USInt;
+         OverrangeExceededCDG : USInt;
+         UnderrangeExceededCDG : USInt;
+         SensorWarningCDG : UInt;
+         SensorErrorCDG : UInt;
+         SensorValuePiezo : Real;
+         ReadingValidPiezo : USInt;
+         OverrangeExceededPiezo : USInt;
+         UnderrangeExceededPiezo : USInt;
+         SensorWarningPiezo : UInt;
+         SensorErrorPiezo : UInt;
+         SensorValuePir : Real;
+         ReadingValidPir : USInt;
+         OverrangeExceededPir : USInt;
+         UnderrangeExceededPir : USInt;
+         SensorWarningPir : UInt;
+         SensorErrorPir : UInt;
+         StatusHighTrip1 : USInt;
+         StatusLowTrip1 : USInt;
+         HighTripEnable1 : USInt;
+         LowTripEnable1 : USInt;
+         HighTripPointLimit1 : Real;
+         LowTripPointLimit1 : Real;
+         HighTripSourceIndex1 : UInt;
+         LowTripSourceIndex1 : UInt;
+         PercentageHighTripSource1 : Real;
+         PercentageLowTripSource1 : Real;
+         HighTripHysteresis1 : Real;
+         LowTripHysteresis1 : Real;
+         StatusHighTrip2 : USInt;
+         StatusLowTrip2 : USInt;
+         HighTripEnable2 : USInt;
+         LowTripEnable2 : USInt;
+         HighTripPointLimit2 : Real;
+         LowTripPointLimit2 : Real;
+         HighTripSourceIndex2 : UInt;
+         LowTripSourceIndex2 : UInt;
+         PercentageHighTripSource2 : Real;
+         PercentageLowTripSource2 : Real;
+         HighTripHysteresis2 : Real;
+         LowTripHysteresis2 : Real;
+         TripPointOutputAll : UDInt;
+         GaugeReadingValid : USInt;
+         GaugeOverrangeExceeded : USInt;
+         GaugeUnderrangeExceeded : USInt;
+         GaugeActiveValue : Real;
+         GaugeActiveSensorNumber : UInt;
+         ActiveExceptionStatus : USInt;
+         ActiveManufacturerWarningDetails : UDInt;
+         ActiveManufacturerErrorDetails : UDInt;
+         ActiveGlobalManufacturerWarningDetails : UDInt;
+         ActiveGlobalManufacturerErrorDetails : UDInt;
+         ActiveGlobalDeviceWarningDetails : UDInt;
+         ActiveGlobalDeviceErrorDetails : UDInt;
+         DataUnit : USInt;   // Current data unit of the gauge (1 = Pa, 4 = mbar, 5 = Torr, 6 = mTorr)
+         SerialNumberVPG : UDInt;
+         "Mac Address" : Array[0..17] of Char;
+         Password : UDInt;
+         SWVersionCompleteDevice : Array[0..13] of Char;
+         SWVersionVPG : Array[0..13] of Char;
+         SWVersionFieldbus : Array[0..13] of Char;
+         SWVersionNP40 : Array[0..13] of Char;
+         SWGitHashFieldbus : Array[0..40] of Char;
+         SWGitHashBLFieldbus : Array[0..40] of Char;
+         HWVersionFieldbus : Array[0..8] of Char;
+         DeviceType : Array[0..24] of Char;
+         FormatFlash : USInt;
+         ZeroAdjustCommandPirani : Array[0..5] of Byte;
+         ZeroAdjustStatusPirani : Byte;
+         ZeroAdjustResponsePirani : Array[0..2] of Byte;
+         FullScaleAdjustCommandPiezo : Array[0..5] of Byte;
+         FullScaleAdjustStatusPiezo : Byte;
+         FullScaleAdjustResponsePiezo : Array[0..2] of Byte;
+         FullScaleAdjustCommandPirani : Array[0..5] of Byte;
+         FullScaleAdjustStatusPirani : Byte;
+         FullScaleAdjustResponsePirani : Array[0..2] of Byte;
+         DeviceResetCommand : Array[0..5] of Byte;
+         DeviceResetStatus : Byte;
+         DeviceResetResponse : Array[0..1] of Byte;
+      END_STRUCT;
+      AcyclicWriteData : Struct
+         TripPoint : Array[1..2] of Struct
+            HighTripEnable : USInt := 0;
+            LowTripEnable : USInt := 0;
+            HighTripPointLimit : Real := 0.0;
+            LowTripPointLimit : Real := 0.0;
+            HighTripSourceIndex : UInt := 0;
+            LowTripSourceIndex : UInt := 0;
+            PercentageHighTripSource : Real := 0.0;
+            PercentageLowTripSource : Real := 0.0;
+            HighTripHysteresis : Real := 0.0;
+            LowTripHysteresis : Real := 0.0;
+         END_STRUCT;
+         DataUnit : USInt;   // Current data unit of the gauge (1 = Pa, 4 = mbar, 5 = Torr, 6 = mTorr)
+         Password : UDInt;
+         "Format Flash" : USInt;
+         ZeroAdjustPirani : Struct
+            Mode : USInt;   // 0: Zero adjust with no offset, 1: Zero adjust with target offset
+            Offset : Real;
+         END_STRUCT;
+         FullScaleAdjustPirani : Struct
+            Mode : USInt;
+            Offset : Real;
+         END_STRUCT;
+      END_STRUCT;
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "LINF_PxG550"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      HwHead : HW_ANY;
+      SensorType : UInt;   // 1 = PSC, 2 = PCG
+      ReadAllParam : Bool;
+      ReadSingleParam : Bool;
+      ReadSingleParamNr : UInt;   // Get The Number from the constants in this file, Prefix is ACYCLIC_
+      WriteTripPoint1 : Bool;
+      WriteTripPoint2 : Bool;
+      WriteDataUnit : Bool;
+      ZeroAdjustPirani : Bool;
+      FullScaleAdjustPirani : Bool;
+      FullScaleAdjustPiezo : Bool;
+      BlockReset : Bool;   // Resets Error of the function Block
+      DeviceReset : Bool;   // Execution of this command causes the device to emulate a complete power cycle. 
+      FactoryReset : Bool;   // Factory reset, Device Reset and all parameters are restored to as-shipped defaults
+   END_VAR
+
+   VAR_OUTPUT 
+      activeValue : Real;
+      activeSensor : UInt;
+      readAllParamDone : Bool;
+      readSingleParamDone : Bool;
+      writeTripPoint1Done : Bool;
+      writeTripPoint2Done : Bool;
+      writeDataUnitDone : Bool;
+      writeResetDone : Bool;
+      writeFactoryResetDone : Bool;
+      zeroAdjustPiraniDone : Bool;
+      fullScaleAdjustPiraniDone : Bool;
+      fullScaleAdjustPiezoDone : Bool;
+      error : Bool;
+      errorDetail : Word;
+   END_VAR
+
+   VAR_IN_OUT 
+      SensorData : "LInf_type_PCG550";
+   END_VAR
+
+   VAR 
+      statInitDone { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      statFlag : Array[0..7] of Bool;
+      statMemoryDone : Struct
+         readAllParam : Bool;
+         readSingleParam : Bool;
+         writeTripPoint1 : Bool;
+         writeTripPoint2 : Bool;
+         writeDataUnit : Bool;
+         writeDeviceReset : Bool;
+         writeFactoryReset : Bool;
+         zeroAdjustPirani : Bool;
+         fullScaleAdjustPirani : Bool;
+         fullScaleAdjustPiezo : Bool;
+      END_STRUCT;
+      statActiveException : USInt;
+      statReadParam : UInt;
+      statStateAcyclic : UInt;
+      statOffsetTripPointIndex : UInt;
+      statTripPointIndex : UInt;
+      statRdRec : Struct
+         cmdRequest : Bool;
+         cmdIndex : UInt;
+         cmdSize : UInt;
+         stsValid : Bool;
+         stsBusy : Bool;
+         stsError : Bool;
+         stsSavedError : DWord;
+         stsStatus : DWord;
+         stsLen : UInt;
+         RdArray : Array[0..127] of Byte;
+      END_STRUCT;
+      statWrRec : Struct
+         cmdRequest : Bool;
+         cmdHwAdress : HW_ANY;
+         cmdIndex : UInt;
+         cmdSendLength : UInt;
+         stsDone : Bool;
+         stsBusy : Bool;
+         stsError : Bool;
+         stsSavedError : DWord;
+         stsStatus : DWord;
+         WrArray : Array[0..127] of Byte;
+      END_STRUCT;
+      statTripPointOutput : Array[0..31] of Bool;
+      statGeoAddr {InstructionName := 'GEOADDR'; LibVersion := '1.0'; S7_SetPoint := 'False'} : Array[0..2] of GEOADDR;
+      statHwAdress { S7_SetPoint := 'True'} : Array[0..4] of HW_ANY;
+      instRdRec {InstructionName := 'RDREC'; LibVersion := '1.0'} : RDREC;
+      instWrRec {InstructionName := 'WRREC'; LibVersion := '1.1'} : WRREC;
+   END_VAR
+
+   VAR_TEMP 
+      tempRetVal : Int;
+      tempDprdVal : Int;
+      tempDeSearializePos : DInt;
+      tempSerializePos : DInt;
+   END_VAR
+
+   VAR CONSTANT 
+      STATE_INIT : UInt := 0;
+      STATE_IDLE : UInt := 10;
+      STATE_READALL_START : UInt := 100;
+      STATE_READALL_BUSY : UInt := 105;
+      STATE_READSINGLE : UInt := 110;
+      STATE_WRITE : UInt := 200;
+      STATE_WRITE_SETPOINT1 : UInt := 250;
+      STATE_WRITE_SETPOINT2 : UInt := 255;
+      STATE_WRITE_HIGHTRIPPOINTLIMIT : UInt := 260;
+      STATE_WRITE_LOWTRIPPOINTLIMIT : UInt := 265;
+      STATE_WRITE_HIGHTRIPSOURCEINDEX : UInt := 270;
+      STATE_WRITE_LOWTRIPSOURCEINDEX : UInt := 275;
+      STATE_WRITE_PERCENTAGEHIGHTRIPSOURCE : UInt := 280;
+      STATE_WRITE_PERCENTAGELOWTRIPSOURCE : UInt := 285;
+      STATE_WRITE_HIGHTRIPHYSTERIS : UInt := 290;
+      STATE_WRITE_LOWTRIPHYSTERIS : UInt := 295;
+      STATE_WRITE_HIGHTRIPENABLE : UInt := 300;
+      STATE_WRITE_LOWTRIPENABLE : UInt := 305;
+      STATE_WRITE_DATAUNIT : UInt := 320;
+      STATE_WRITE_RESET : UInt := 330;
+      STATE_WRITE_FACTORYRESET : UInt := 340;
+      STATE_WRITE_FULLSCALEADJUST_PIEZO : UInt := 400;
+      STATE_ANSWER_FULLSCALEADJUST_PIEZO : UInt := 405;
+      STATE_WRITE_ZEROADJUST_PIRANI : UInt := 410;
+      STATE_ANSWER_ZEROADJUST_PIRANI : UInt := 415;
+      STATE_WRITE_FULLSCALEADJUST_PIRANI : UInt := 420;
+      STATE_ANSWER_FULLSCALEADJUST_PIRANI : UInt := 425;
+      STATE_ERROR : UInt := 900;
+      "---END_STATES_WRITE----" : UInt;
+      ERROR_NOERROR : Word := 16#0000;
+      ERROR_DPRD_DAT_TRIPPOINT : Word := 16#8011;
+      ERROR_DPRD_DAT_ACTIVEVALUE : Word := 16#8012;
+      ERROR_DPRD_DAT_ACTIVESENSOR : Word := 16#8013;
+      ERROR_DPRD_DAT_ACTIVEEXCEPTION : Word := 16#8014;
+      ERROR_RDREC : Word := 16#8020;
+      ERROR_WDREC : Word := 16#8021;
+      ERROR_FULLSCALEADJUSTPIEZO : Word := 16#8140;
+      ERROR_ZEROADJUSTPIRANI : Word := 16#8141;
+      ERROR_FULLSCALEADJUSTPIRANI : Word := 16#8142;
+      "---END_ERROR_CODES---" : UInt;
+      SUBSLOT_TRIP_POINT_OUTPUT : UInt := 20;
+      SUBSLOT_GAUGEACTIVE_VALUE : UInt := 21;
+      SUBSLOT_GAUGE_ACTIVE_SENSOR : UInt := 22;
+      SUBSLOT_ACTIVE_EXCEPTION : UInt := 23;
+      SUBSLOT_PARAMETERACCESS : UInt := 1;
+      "--" : UInt;
+      ACYCLIC_SENSORVALUECDG : UInt := 1;
+      ACYCLIC_READINGVALIDCDG : UInt := 2;
+      ACYCLIC_OVERRANGEEXCEEDEDCDG : UInt := 3;
+      ACYCLIC_UNDERRANGEEXCEEDEDCDG : UInt := 4;
+      ACYCLIC_SENSORWARNINGCDG : UInt := 5;
+      ACYCLIC_SENSORERRORCDG : UInt := 6;
+      ACYCLIC_SENSORVALUEPIEZO : UInt := 7;
+      ACYCLIC_READINGVALIDPIEZO : UInt := 8;
+      ACYCLIC_UNDERRANGEEXCEEDEDPIEZO : UInt := 10;
+      ACYCLIC_SENSORWARNINGPIEZO : UInt := 11;
+      ACYCLIC_SENSORERRORPIEZO : UInt := 12;
+      ACYCLIC_SENSORVALUEPIR : UInt := 13;
+      ACYCLIC_READINGVALIDPIR : UInt := 14;
+      ACYCLIC_OVERRANGEEXCEEDEDPIR : UInt := 15;
+      ACYCLIC_UNDERRANGEEXCEEDEDPIR : UInt := 16;
+      ACYCLIC_SENSORWARNINGPIR : UInt := 17;
+      ACYCLIC_SENSORERRORPIR : UInt := 18;
+      ACYCLIC_STATUSHIGHTRIP1 : UInt := 19;
+      ACYCLIC_STATUSLOWTRIP1 : UInt := 20;
+      ACYCLIC_HIGHTRIPENABLE1 : UInt := 21;
+      ACYCLIC_LOWTRIPENABLE1 : UInt := 22;
+      ACYCLIC_HIGHTRIPPOINTLIMIT1 : UInt := 23;
+      ACYCLIC_LOWTRIPPOINTLIMIT1 : UInt := 24;
+      ACYCLIC_HIGHTRIPSOURCEINDEX1 : UInt := 25;
+      ACYCLIC_LOWTRIPSOURCEINDEX1 : UInt := 26;
+      ACYCLIC_PERCENTAGEHIGHTRIPSOURCE1 : UInt := 27;
+      ACYCLIC_PERCENTAGELOWTRIPSOURCE1 : UInt := 28;
+      ACYCLIC_HIGHTRIPHYSTERESIS1 : UInt := 29;
+      ACYCLIC_LOWTRIPHYSTERESIS1 : UInt := 30;
+      ACYCLIC_STATUSHIGHTRIP2 : UInt := 31;
+      ACYCLIC_STATUSLOWTRIP2 : UInt := 32;
+      ACYCLIC_HIGHTRIPENABLE2 : UInt := 33;
+      ACYCLIC_LOWTRIPENABLE2 : UInt := 34;
+      ACYCLIC_HIGHTRIPPOINTLIMIT2 : UInt := 35;
+      ACYCLIC_LOWTRIPPOINTLIMIT2 : UInt := 36;
+      ACYCLIC_HIGHTRIPSOURCEINDEX2 : UInt := 37;
+      ACYCLIC_LOWTRIPSOURCEINDEX2 : UInt := 38;
+      ACYCLIC_PERCENTAGEHIGHTRIPSOURCE2 : UInt := 39;
+      ACYCLIC_PERCENTAGELOWTRIPSOURCE2 : UInt := 40;
+      ACYCLIC_HIGHTRIPHYSTERESIS2 : UInt := 41;
+      ACYCLIC_LOWTRIPHYSTERESIS2 : UInt := 42;
+      ACYCLIC_TRIPPOINTOUTPUTALL : UInt := 43;
+      ACYCLIC_GAUGEREADINGVALID : UInt := 44;
+      ACYCLIC_GAUGEOVERRANGEEXCEEDED : UInt := 45;
+      ACYCLIC_GAUGEUNDERRANGEEXCEEDED : UInt := 46;
+      ACYCLIC_GAUGEACTIVEVALUE : UInt := 47;
+      ACYCLIC_GAUGEACTIVESENSORNUMBER : UInt := 48;
+      ACYCLIC_ZEROADJUSTSTATUSPIRANI : UInt := 49;
+      ACYCLIC_ACTIVEEXCEPTIONSTATUS : UInt := 50;
+      ACYCLIC_ACTIVEMANUFACTURERWARNINGDETAILS : UInt := 51;
+      ACYCLIC_ACTIVEMANUFACTURERERRORDETAILS : UInt := 52;
+      ACYCLIC_ACTIVEGLOBALMANUFACTURERWARNINGDETAILS : UInt := 53;
+      ACYCLIC_ACTIVEGLOBALMANUFACTURERERRORDETAILS : UInt := 54;
+      ACYCLIC_ACTIVEGLOBALDEVICEWARNINGDETAILS : UInt := 55;
+      ACYCLIC_ACTIVEGLOBALDEVICEERRORDETAILS : UInt := 56;
+      ACYCLIC_DATAUNIT : UInt := 57;
+      ACYCLIC_SERIALNUMBERVPG : UInt := 58;
+      ACYCLIC_MACADDRESS : UInt := 59;
+      ACYCLIC_PASSWORD : UInt := 60;
+      ACYCLIC_SWVERSIONCOMPLETEDEVICE : UInt := 62;
+      ACYCLIC_SWVERSIONVPG : UInt := 63;
+      ACYCLIC_SWVERSIONFIELDBUS : UInt := 64;
+      ACYCLIC_SWVERSIONNP40 : UInt := 65;
+      ACYCLIC_SWGITHASHFIELDBUS : UInt := 66;
+      ACYCLIC_SWGITHASHBLFIELDBUS : UInt := 67;
+      ACYCLIC_HWVERSIONFIELDBUS : UInt := 68;
+      ACYCLIC_DEVICETYPE : UInt := 69;
+      ACYCLIC_FORMATFLASH : UInt := 70;
+      ACYCLIC_ZEROADJUSTCOMMANDPIRANI : UInt := 71;
+      ACYCLIC_ZEROADJUSTSTATUSPIRANI_1 : UInt := 72;
+      ACYCLIC_ZEROADJUSTRESPONSEPIRANI : UInt := 73;
+      ACYCLIC_FULLSCALEADJUSTCOMMANDPIEZO : UInt := 74;
+      ACYCLIC_FULLSCALEADJUSTSTATUSPIEZO : UInt := 75;
+      ACYCLIC_FULLSCALEADJUSTRESPONSEPIEZO : UInt := 76;
+      ACYCLIC_FULLSCALEADJUSTSTATUSPIRANI : UInt := 78;
+      ACYCLIC_FULLSCALEADJUSTRESPONSEPIRANI : UInt := 79;
+      ACYCLIC_DEVICERESETCOMMAND : UInt := 80;
+   END_VAR
+
+
+BEGIN
+	(****************************************************************************
+	"INFICON AG"
+	****************************************************************************
+	
+	(c) Copyright 2023 "INFICON AG". All Rights Reserved.
+	
+	Author:  Christoph Tanno
+	Date:    02.06.2023
+	
+	****************************************************************************)
+	REGION Init
+	    IF NOT #statInitDone THEN
+	        //Get HW_HEAD Location
+	        #tempRetVal := LOG2GEO(LADDR := #HwHead, GEOADDR := #statGeoAddr[0]);
+	        #statGeoAddr[2] := #statGeoAddr[1] := #statGeoAddr[0];
+	        //Manipulate HW_HEAD Location to get Subslot HW_ID
+	        #statGeoAddr[1].SLOT := 1;
+	        #statGeoAddr[1].SUBSLOT := #SUBSLOT_TRIP_POINT_OUTPUT;
+	        #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[0]);
+	        #statGeoAddr[1].SUBSLOT := #SUBSLOT_GAUGEACTIVE_VALUE;
+	        #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[1]);
+	        #statGeoAddr[1].SUBSLOT := #SUBSLOT_GAUGE_ACTIVE_SENSOR;
+	        #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[2]);
+	        #statGeoAddr[1].SUBSLOT := #SUBSLOT_ACTIVE_EXCEPTION;
+	        #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[3]);
+	        #statGeoAddr[1].SUBSLOT := #SUBSLOT_PARAMETERACCESS;
+	        #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[4]);
+	        
+	        #statInitDone := TRUE;
+	    END_IF;
+	END_REGION
+	
+	REGION PreCycle
+	
+	END_REGION
+	    
+	REGION ReadCyclic
+	    
+	    #tempDprdVal := DPRD_DAT(LADDR := #statHwAdress[0], RECORD => #statTripPointOutput);
+	    IF #tempDprdVal <> 0 THEN
+	        #errorDetail := #ERROR_DPRD_DAT_TRIPPOINT;
+	        #error := TRUE;
+	    END_IF;
+	    #tempDprdVal := DPRD_DAT(LADDR := #statHwAdress[1], RECORD => #activeValue);
+	    IF #tempDprdVal <> 0 THEN
+	        #errorDetail := #ERROR_DPRD_DAT_ACTIVEVALUE;
+	        #error := TRUE;
+	    END_IF;
+	    #tempDprdVal := DPRD_DAT(LADDR := #statHwAdress[2], RECORD => #activeSensor);
+	    IF #tempDprdVal <> 0 THEN
+	        #errorDetail := #ERROR_DPRD_DAT_ACTIVESENSOR;
+	        #error := TRUE;
+	    END_IF;
+	    #tempDprdVal := DPRD_DAT(LADDR := #statHwAdress[3], RECORD => #statActiveException);
+	    IF #tempDprdVal <> 0 THEN
+	        #errorDetail := #ERROR_DPRD_DAT_ACTIVEEXCEPTION;
+	        #error := TRUE;
+	    END_IF;
+	END_REGION
+	
+	REGION StateMachineAcyclic
+	    //Contains a SimpleStatemachine to Lock Read and Write at the same time
+	    CASE #statStateAcyclic OF
+	        #STATE_INIT:
+	            #statStateAcyclic := #STATE_IDLE;
+	        #STATE_IDLE:
+	            //Reset Done
+	            #statMemoryDone.readAllParam := FALSE;
+	            #statMemoryDone.readSingleParam := FALSE;
+	            #statMemoryDone.writeTripPoint1 := FALSE;
+	            #statMemoryDone.writeTripPoint2 := FALSE;
+	            #statMemoryDone.writeDataUnit := FALSE;
+	            
+	            IF #WriteTripPoint1
+	                OR #WriteTripPoint2
+	                OR ( #DeviceReset AND NOT #statMemoryDone.writeDeviceReset)
+	                OR ( #FactoryReset AND NOT #statMemoryDone.writeFactoryReset)
+	            THEN
+	                #statStateAcyclic := #STATE_WRITE;
+	            ELSIF (#ZeroAdjustPirani AND NOT #statMemoryDone.zeroAdjustPirani) THEN
+	                #statStateAcyclic := #STATE_WRITE_ZEROADJUST_PIRANI;
+	            ELSIF (#FullScaleAdjustPirani AND NOT #statMemoryDone.fullScaleAdjustPirani) THEN
+	                #statStateAcyclic := #STATE_WRITE_FULLSCALEADJUST_PIRANI;
+	            ELSIF (#FullScaleAdjustPiezo AND NOT #statMemoryDone.fullScaleAdjustPiezo) THEN
+	                #statStateAcyclic := #STATE_WRITE_FULLSCALEADJUST_PIEZO;
+	                
+	            ELSIF #ReadAllParam THEN
+	                #statStateAcyclic := #STATE_READALL_START;
+	            ELSIF #ReadSingleParam THEN
+	                #statStateAcyclic := #STATE_READSINGLE;
+	            END_IF;
+	            
+	        #STATE_READALL_START:
+	            #statReadParam := 1;
+	            #statRdRec.cmdRequest := TRUE;
+	            #statStateAcyclic := #STATE_READALL_BUSY;
+	            
+	            
+	        #STATE_READALL_BUSY:
+	            
+	            IF #statRdRec.stsValid THEN
+	                #statReadParam += 1;
+	                IF #statReadParam > #ACYCLIC_DEVICERESETCOMMAND THEN
+	                    #statRdRec.cmdRequest := FALSE;
+	                    #statReadParam := 1;
+	                    #statStateAcyclic := #STATE_IDLE;
+	                    #statMemoryDone.readAllParam := TRUE;
+	                END_IF;
+	            END_IF;
+	            
+	        #STATE_READSINGLE:
+	            #statReadParam := #ReadSingleParamNr;
+	            #statRdRec.cmdRequest := TRUE;
+	            
+	            IF #statRdRec.stsBusy THEN
+	                #statRdRec.cmdRequest := FALSE;
+	            END_IF;
+	            
+	            IF #statRdRec.stsValid THEN
+	                #statRdRec.cmdRequest := FALSE;
+	                #statMemoryDone.readSingleParam := TRUE;
+	                #statStateAcyclic := #STATE_IDLE;
+	            END_IF;
+	                
+	            #STATE_WRITE:
+	                //Determine which param is to Write
+	                IF #WriteTripPoint1 THEN
+	                    #statStateAcyclic := #STATE_WRITE_SETPOINT1;
+	                    #statTripPointIndex := 1;
+	                ELSIF #WriteTripPoint2 THEN
+	                    #statStateAcyclic := #STATE_WRITE_SETPOINT2;
+	                    #statTripPointIndex := 2;
+	                ELSIF #WriteDataUnit THEN
+	                    #statStateAcyclic := #STATE_WRITE_DATAUNIT;
+	                ELSIF #DeviceReset THEN
+	                    #statStateAcyclic := #STATE_WRITE_RESET;
+	                ELSIF #FactoryReset THEN
+	                    #statStateAcyclic := #STATE_WRITE_FACTORYRESET;
+	                END_IF;
+	                
+	                
+	            #STATE_WRITE_SETPOINT1:
+	                #statStateAcyclic := #STATE_WRITE_HIGHTRIPPOINTLIMIT;
+	                #statOffsetTripPointIndex := 16#0000;
+	                
+	            #STATE_WRITE_SETPOINT2:
+	                #statStateAcyclic := #STATE_WRITE_HIGHTRIPPOINTLIMIT;
+	                #statOffsetTripPointIndex := 16#0100;
+	                
+	            #STATE_WRITE_HIGHTRIPPOINTLIMIT:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].HighTripPointLimit, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0826 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_LOWTRIPPOINTLIMIT;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_LOWTRIPPOINTLIMIT:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].LowTripPointLimit, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0829 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                //Transition to next state aftert succesfull write
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_HIGHTRIPSOURCEINDEX;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_HIGHTRIPSOURCEINDEX:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].HighTripSourceIndex, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0812 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 2;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                //Transition to next state aftert succesfull write
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_LOWTRIPSOURCEINDEX;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_LOWTRIPSOURCEINDEX:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].LowTripSourceIndex, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0815 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 2;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                //Transition to next state aftert succesfull write
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_PERCENTAGEHIGHTRIPSOURCE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_PERCENTAGEHIGHTRIPSOURCE:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].PercentageHighTripSource, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0813 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                //Transition to next state aftert succesfull write
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_PERCENTAGELOWTRIPSOURCE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_PERCENTAGELOWTRIPSOURCE:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].PercentageLowTripSource, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0816 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                //Transition to next state aftert succesfull write
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_HIGHTRIPHYSTERIS;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_HIGHTRIPHYSTERIS:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].HighTripHysteresis, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#082C + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_LOWTRIPHYSTERIS;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_LOWTRIPHYSTERIS:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].LowTripHysteresis, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#082D + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 4;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_HIGHTRIPENABLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_HIGHTRIPENABLE:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].HighTripEnable, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0820 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 1;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_WRITE_LOWTRIPENABLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	            #STATE_WRITE_LOWTRIPENABLE:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.TripPoint[#statTripPointIndex].LowTripEnable, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0821 + #statOffsetTripPointIndex;
+	                #statWrRec.cmdSendLength := 1;
+	                #statGeoAddr[2].SLOT := 1;
+	                #statGeoAddr[2].SUBSLOT := 1;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_IDLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    CASE #statTripPointIndex OF
+	                        1:
+	                            #statMemoryDone.writeTripPoint1 := TRUE;
+	                        2:
+	                            #statMemoryDone.writeTripPoint2 := TRUE;
+	                    END_CASE;
+	                    
+	                END_IF;
+	                
+	            #STATE_WRITE_DATAUNIT:
+	                #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.DataUnit, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                #statWrRec.cmdIndex := 16#0021;
+	                #statWrRec.cmdSendLength := 1;
+	                #statGeoAddr[2].SLOT := 0;
+	                #statGeoAddr[2].SUBSLOT := 10;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_IDLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    #statMemoryDone.writeDataUnit := TRUE;
+	                END_IF;
+	                
+	            #STATE_WRITE_RESET:
+	                //Standard Reset 0x74-65-73-65-72-00
+	                #statWrRec.WrArray[0] := 16#74;
+	                #statWrRec.WrArray[1] := 16#65;
+	                #statWrRec.WrArray[2] := 16#73;
+	                #statWrRec.WrArray[3] := 16#65;
+	                #statWrRec.WrArray[4] := 16#72;
+	                #statWrRec.WrArray[5] := 16#00;
+	                
+	                #statWrRec.cmdIndex := 16#0082;
+	                #statWrRec.cmdSendLength := 6;
+	                #statGeoAddr[2].SLOT := 0;
+	                #statGeoAddr[2].SUBSLOT := 10;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_IDLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    #statMemoryDone.writeDeviceReset := TRUE;
+	                END_IF;
+	                
+	            #STATE_WRITE_FACTORYRESET:
+	                //Standard Reset 0x74-65-73-65-72-66
+	                #statWrRec.WrArray[0] := 16#74;
+	                #statWrRec.WrArray[1] := 16#65;
+	                #statWrRec.WrArray[2] := 16#73;
+	                #statWrRec.WrArray[3] := 16#65;
+	                #statWrRec.WrArray[4] := 16#72;
+	                #statWrRec.WrArray[5] := 16#01;
+	                
+	                #statWrRec.cmdIndex := 16#0082;
+	                #statWrRec.cmdSendLength := 6;
+	                #statGeoAddr[2].SLOT := 0;
+	                #statGeoAddr[2].SUBSLOT := 10;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_IDLE;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    #statMemoryDone.writeFactoryReset := TRUE;
+	                END_IF;
+	                
+	            #STATE_WRITE_FULLSCALEADJUST_PIEZO:
+	                //Performed at atmospheric pressure
+	                #statWrRec.WrArray[0] := 16#00;
+	                #statWrRec.WrArray[1] := 16#03;
+	                #statWrRec.WrArray[2] := 16#00;
+	                #statWrRec.WrArray[3] := 16#00;
+	                #statWrRec.WrArray[4] := 16#00;
+	                #statWrRec.WrArray[5] := 16#00;
+	                
+	                #statWrRec.cmdIndex := 16#0274;
+	                #statWrRec.cmdSendLength := 6;
+	                #statGeoAddr[2].SLOT := 0;
+	                #statGeoAddr[2].SUBSLOT := 10;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_ANSWER_FULLSCALEADJUST_PIEZO;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    
+	                    //Prepare Response
+	                    #statReadParam := #ACYCLIC_FULLSCALEADJUSTSTATUSPIEZO;
+	                    #statRdRec.cmdRequest := TRUE;
+	                    #SensorData.AcyclicReadData.FullScaleAdjustStatusPiezo := 16#0;
+	                END_IF;
+	                
+	            #STATE_ANSWER_FULLSCALEADJUST_PIEZO:
+	                
+	                IF #statRdRec.stsValid THEN
+	                    #statRdRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                CASE #SensorData.AcyclicReadData.FullScaleAdjustStatusPiezo OF
+	                    0: //Wait for RdRec Answer
+	                        ;
+	                    1: // Last command completed, no errors, reply available
+	                        #statMemoryDone.fullScaleAdjustPiezo := TRUE;
+	                        #statStateAcyclic := #STATE_IDLE;
+	                    3: //Last command completed, errors present, reply available
+	                        #errorDetail := #ERROR_FULLSCALEADJUSTPIEZO;
+	                        #error := TRUE;
+	                        #statStateAcyclic := #STATE_ERROR;
+	                    255: //Command is executing so we ask again
+	                        #statRdRec.cmdRequest := TRUE;
+	                        #SensorData.AcyclicReadData.FullScaleAdjustStatusPiezo := 16#0;
+	                END_CASE;
+	            
+	            #STATE_WRITE_ZEROADJUST_PIRANI:
+	                CASE #SensorType OF
+	                    1: //PSC
+	                        #statWrRec.WrArray[1] := 16#01;
+	                    2:
+	                        #statWrRec.WrArray[1] := 16#02;
+	                END_CASE;
+	                        
+	                        
+	                CASE #SensorData.AcyclicWriteData.ZeroAdjustPirani.Mode OF
+	                    0: //Zero adjust with no offset,
+	                        #statWrRec.WrArray[0] := 16#00;
+	                        #statWrRec.WrArray[2] := 16#00;
+	                        #statWrRec.WrArray[3] := 16#00;
+	                        #statWrRec.WrArray[4] := 16#00;
+	                        #statWrRec.WrArray[5] := 16#00;
+	                    1: //Zero adjust with target offset
+	                        #statWrRec.WrArray[0] := 16#02;
+	                        #tempSerializePos := 2;
+	                        #tempRetVal := Serialize(SRC_VARIABLE := #SensorData.AcyclicWriteData.DataUnit, DEST_ARRAY => #statWrRec.WrArray, POS := #tempSerializePos);
+	                        
+	                END_CASE;
+	                #statWrRec.cmdIndex := 16#0370;
+	                #statWrRec.cmdSendLength := 6;
+	                #statGeoAddr[2].SLOT := 0;
+	                #statGeoAddr[2].SUBSLOT := 10;
+	                #statWrRec.cmdRequest := TRUE;
+	                
+	                //Set Write commando false
+	                IF #statWrRec.stsBusy THEN
+	                    #statWrRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                IF #statWrRec.stsDone THEN
+	                    #statStateAcyclic := #STATE_ANSWER_ZEROADJUST_PIRANI;
+	                    #statWrRec.cmdRequest := FALSE;
+	                    
+	                    //Prepare Response
+	                    #statReadParam := #ACYCLIC_ZEROADJUSTSTATUSPIRANI;
+	                    #statRdRec.cmdRequest := TRUE;
+	                    #SensorData.AcyclicReadData.ZeroAdjustStatusPirani := 16#0;
+	                END_IF;
+	                
+	            #STATE_ANSWER_ZEROADJUST_PIRANI:
+	                
+	                IF #statRdRec.stsValid THEN
+	                    #statRdRec.cmdRequest := FALSE;
+	                END_IF;
+	                
+	                CASE #SensorData.AcyclicReadData.ZeroAdjustStatusPirani OF
+	                    0: //Wait for RdRec Answer
+	                        ;
+	                    1: // Last command completed, no errors, reply available
+	                        #statMemoryDone.zeroAdjustPirani := TRUE;
+	                        #statStateAcyclic := #STATE_IDLE;
+	                    3: //Last command completed, errors present, reply available
+	                        #errorDetail:= #ERROR_ZEROADJUSTPIRANI;
+	                        #error := TRUE;
+	                        #statStateAcyclic := #STATE_ERROR;
+	                    255: //Command is executing so we ask again
+	                        #statRdRec.cmdRequest := TRUE;
+	                        #SensorData.AcyclicReadData.ZeroAdjustStatusPirani := 16#0;
+	                END_CASE;
+	                
+	            #STATE_ERROR:
+	                IF #BlockReset THEN
+	                    #errorDetail := #ERROR_NOERROR;
+	                    #statStateAcyclic := #STATE_INIT;
+	                END_IF;
+	                
+	    END_CASE;
+	    
+	END_REGION
+	
+	REGION ReadAcyclic
+	    
+	    REGION DefineRdRecParam
+	        CASE #statReadParam OF
+	            #ACYCLIC_SENSORVALUECDG:
+	                #statRdRec.cmdIndex := 16#0100;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_READINGVALIDCDG:
+	                #statRdRec.cmdIndex := 16#0101;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_OVERRANGEEXCEEDEDCDG:
+	                #statRdRec.cmdIndex := 16#0102;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_UNDERRANGEEXCEEDEDCDG:
+	                #statRdRec.cmdIndex := 16#0103;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORWARNINGCDG:
+	                #statRdRec.cmdIndex := 16#0140;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORERRORCDG:
+	                #statRdRec.cmdIndex := 16#0141;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORVALUEPIEZO:
+	                #statRdRec.cmdIndex := 16#0200;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_READINGVALIDPIEZO:
+	                #statRdRec.cmdIndex := 16#0201;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_UNDERRANGEEXCEEDEDPIEZO:
+	                #statRdRec.cmdIndex := 16#0203;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORWARNINGPIEZO:
+	                #statRdRec.cmdIndex := 16#0240;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORERRORPIEZO:
+	                #statRdRec.cmdIndex := 16#0241;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORVALUEPIR:
+	                #statRdRec.cmdIndex := 16#0300;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_READINGVALIDPIR:
+	                #statRdRec.cmdIndex := 16#0301;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_OVERRANGEEXCEEDEDPIR:
+	                #statRdRec.cmdIndex := 16#0302;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_UNDERRANGEEXCEEDEDPIR:
+	                #statRdRec.cmdIndex := 16#0303;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORWARNINGPIR:
+	                #statRdRec.cmdIndex := 16#0340;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_SENSORERRORPIR:
+	                #statRdRec.cmdIndex := 16#0341;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_STATUSHIGHTRIP1:
+	                #statRdRec.cmdIndex := 16#0800;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_STATUSLOWTRIP1:
+	                #statRdRec.cmdIndex := 16#0801;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPENABLE1:
+	                #statRdRec.cmdIndex := 16#0820;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPENABLE1:
+	                #statRdRec.cmdIndex := 16#0821;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPPOINTLIMIT1:
+	                #statRdRec.cmdIndex := 16#0826;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPPOINTLIMIT1:
+	                #statRdRec.cmdIndex := 16#0829;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPSOURCEINDEX1:
+	                #statRdRec.cmdIndex := 16#0812;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPSOURCEINDEX1:
+	                #statRdRec.cmdIndex := 16#0815;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_PERCENTAGEHIGHTRIPSOURCE1:
+	                #statRdRec.cmdIndex := 16#0813;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_PERCENTAGELOWTRIPSOURCE1:
+	                #statRdRec.cmdIndex := 16#0816;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPHYSTERESIS1:
+	                #statRdRec.cmdIndex := 16#082C;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPHYSTERESIS1:
+	                #statRdRec.cmdIndex := 16#082D;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_STATUSHIGHTRIP2:
+	                #statRdRec.cmdIndex := 16#0900;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_STATUSLOWTRIP2:
+	                #statRdRec.cmdIndex := 16#0901;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPENABLE2:
+	                #statRdRec.cmdIndex := 16#0920;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPENABLE2:
+	                #statRdRec.cmdIndex := 16#0921;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPPOINTLIMIT2:
+	                #statRdRec.cmdIndex := 16#0926;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPPOINTLIMIT2:
+	                #statRdRec.cmdIndex := 16#0929;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPSOURCEINDEX2:
+	                #statRdRec.cmdIndex := 16#0912;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPSOURCEINDEX2:
+	                #statRdRec.cmdIndex := 16#0915;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_PERCENTAGEHIGHTRIPSOURCE2:
+	                #statRdRec.cmdIndex := 16#0913;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_PERCENTAGELOWTRIPSOURCE2:
+	                #statRdRec.cmdIndex := 16#0916;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_HIGHTRIPHYSTERESIS2:
+	                #statRdRec.cmdIndex := 16#092C;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_LOWTRIPHYSTERESIS2:
+	                #statRdRec.cmdIndex := 16#092D;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_TRIPPOINTOUTPUTALL:
+	                #statRdRec.cmdIndex := 16#0006;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_GAUGEREADINGVALID:
+	                #statRdRec.cmdIndex := 16#0001;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_GAUGEOVERRANGEEXCEEDED:
+	                #statRdRec.cmdIndex := 16#0002;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_GAUGEUNDERRANGEEXCEEDED:
+	                #statRdRec.cmdIndex := 16#0003;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_GAUGEACTIVEVALUE:
+	                #statRdRec.cmdIndex := 16#0004;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_GAUGEACTIVESENSORNUMBER:
+	                #statRdRec.cmdIndex := 16#0005;
+	                #statRdRec.cmdSize := 2;
+	                #statGeoAddr[1].SLOT := 1;
+	                #statGeoAddr[1].SUBSLOT := 1;
+	            #ACYCLIC_ACTIVEEXCEPTIONSTATUS:
+	                #statRdRec.cmdIndex := 16#0040;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEMANUFACTURERWARNINGDETAILS:
+	                #statRdRec.cmdIndex := 16#0042;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEMANUFACTURERERRORDETAILS:
+	                #statRdRec.cmdIndex := 16#0044;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEGLOBALMANUFACTURERWARNINGDETAILS:
+	                #statRdRec.cmdIndex := 16#0046;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEGLOBALMANUFACTURERERRORDETAILS:
+	                #statRdRec.cmdIndex := 16#0048;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEGLOBALDEVICEWARNINGDETAILS:
+	                #statRdRec.cmdIndex := 16#0045;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ACTIVEGLOBALDEVICEERRORDETAILS:
+	                #statRdRec.cmdIndex := 16#0047;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_DATAUNIT:
+	                #statRdRec.cmdIndex := 16#0021;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SERIALNUMBERVPG:
+	                #statRdRec.cmdIndex := 16#0022;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_MACADDRESS:
+	                #statRdRec.cmdIndex := 16#0023;
+	                #statRdRec.cmdSize := 18;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_PASSWORD:
+	                #statRdRec.cmdIndex := 16#0020;
+	                #statRdRec.cmdSize := 4;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWVERSIONCOMPLETEDEVICE:
+	                #statRdRec.cmdIndex := 16#00B4;
+	                #statRdRec.cmdSize := 14;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWVERSIONVPG:
+	                #statRdRec.cmdIndex := 16#00B5;
+	                #statRdRec.cmdSize := 14;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWVERSIONFIELDBUS:
+	                #statRdRec.cmdIndex := 16#00B6;
+	                #statRdRec.cmdSize := 14;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWVERSIONNP40:
+	                #statRdRec.cmdIndex := 16#00B7;
+	                #statRdRec.cmdSize := 14;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWGITHASHFIELDBUS:
+	                #statRdRec.cmdIndex := 16#00B8;
+	                #statRdRec.cmdSize := 41;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_SWGITHASHBLFIELDBUS:
+	                #statRdRec.cmdIndex := 16#00B9;
+	                #statRdRec.cmdSize := 41;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_HWVERSIONFIELDBUS:
+	                #statRdRec.cmdIndex := 16#00BB;
+	                #statRdRec.cmdSize := 9;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_DEVICETYPE:
+	                #statRdRec.cmdIndex := 16#00FE;
+	                #statRdRec.cmdSize := 25;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FORMATFLASH:
+	                #statRdRec.cmdIndex := 16#00FF;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ZEROADJUSTCOMMANDPIRANI:
+	                #statRdRec.cmdIndex := 16#0370;
+	                #statRdRec.cmdSize := 6;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ZEROADJUSTSTATUSPIRANI:
+	                #statRdRec.cmdIndex := 16#0371;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_ZEROADJUSTRESPONSEPIRANI:
+	                #statRdRec.cmdIndex := 16#0372;
+	                #statRdRec.cmdSize := 3;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FULLSCALEADJUSTCOMMANDPIEZO:
+	                #statRdRec.cmdIndex := 16#0274;
+	                #statRdRec.cmdSize := 6;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FULLSCALEADJUSTSTATUSPIEZO:
+	                #statRdRec.cmdIndex := 16#0275;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FULLSCALEADJUSTRESPONSEPIEZO:
+	                #statRdRec.cmdIndex := 16#0276;
+	                #statRdRec.cmdSize := 3;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FULLSCALEADJUSTSTATUSPIRANI:
+	                #statRdRec.cmdIndex := 16#0375;
+	                #statRdRec.cmdSize := 1;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_FULLSCALEADJUSTRESPONSEPIRANI:
+	                #statRdRec.cmdIndex := 16#0376;
+	                #statRdRec.cmdSize := 3;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	            #ACYCLIC_DEVICERESETCOMMAND:
+	                #statRdRec.cmdIndex := 16#0082;
+	                #statRdRec.cmdSize := 6;
+	                #statGeoAddr[1].SLOT := 0;
+	                #statGeoAddr[1].SUBSLOT := 10;
+	                
+	                
+	                
+	                
+	            ELSE
+	                ;
+	        END_CASE;
+	        
+	    END_REGION
+	    
+	    
+	    #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[1], LADDR => #statHwAdress[4]);
+	    
+	    #instRdRec(REQ := #statRdRec.cmdRequest,
+	                ID := #statHwAdress[4],
+	                INDEX := #statRdRec.cmdIndex,
+	                MLEN := #statRdRec.cmdSize,
+	                VALID => #statRdRec.stsValid,
+	                BUSY => #statRdRec.stsBusy,
+	                ERROR => #statRdRec.stsError,
+	                STATUS => #statRdRec.stsStatus,
+	                LEN => #statRdRec.stsLen,
+	                RECORD := #statRdRec.RdArray);
+	    
+	    IF #statRdRec.stsError
+	        AND NOT #statFlag[0] THEN
+	        #statRdRec.stsSavedError := #statRdRec.stsStatus;
+	        //#RdRec.cmdIndex += 1;
+	    END_IF;
+	    #statFlag[0] := #statRdRec.stsError;
+	    
+	    REGION EvaluateRdRec 
+	        IF #statRdRec.stsValid THEN
+	            //Copy Data
+	            CASE #statReadParam OF
+	                #ACYCLIC_SENSORVALUECDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorValueCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_READINGVALIDCDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ReadingValidCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_OVERRANGEEXCEEDEDCDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.OverrangeExceededCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_UNDERRANGEEXCEEDEDCDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.UnderrangeExceededCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORWARNINGCDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorWarningCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORERRORCDG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorErrorCDG, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORVALUEPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorValuePiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_READINGVALIDPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ReadingValidPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_UNDERRANGEEXCEEDEDPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.UnderrangeExceededPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORWARNINGPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorWarningPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORERRORPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorErrorPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORVALUEPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorValuePir, POS := #tempDeSearializePos);
+	                #ACYCLIC_READINGVALIDPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ReadingValidPir, POS := #tempDeSearializePos);
+	                #ACYCLIC_OVERRANGEEXCEEDEDPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.OverrangeExceededPir, POS := #tempDeSearializePos);
+	                #ACYCLIC_UNDERRANGEEXCEEDEDPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.UnderrangeExceededPir, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORWARNINGPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorWarningPir, POS := #tempDeSearializePos);
+	                #ACYCLIC_SENSORERRORPIR:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SensorErrorPir, POS := #tempDeSearializePos);
+	                #ACYCLIC_STATUSHIGHTRIP1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.StatusHighTrip1, POS := #tempDeSearializePos);
+	                #ACYCLIC_STATUSLOWTRIP1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.StatusLowTrip1, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPENABLE1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripEnable1, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPENABLE1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripEnable1, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPPOINTLIMIT1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripPointLimit1, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPPOINTLIMIT1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripPointLimit1, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPSOURCEINDEX1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripSourceIndex1, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPSOURCEINDEX1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripSourceIndex1, POS := #tempDeSearializePos);
+	                #ACYCLIC_PERCENTAGEHIGHTRIPSOURCE1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.PercentageHighTripSource1, POS := #tempDeSearializePos);
+	                #ACYCLIC_PERCENTAGELOWTRIPSOURCE1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.PercentageLowTripSource1, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPHYSTERESIS1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripHysteresis1, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPHYSTERESIS1:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripHysteresis1, POS := #tempDeSearializePos);
+	                #ACYCLIC_STATUSHIGHTRIP2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.StatusHighTrip2, POS := #tempDeSearializePos);
+	                #ACYCLIC_STATUSLOWTRIP2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.StatusLowTrip2, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPENABLE2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripEnable2, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPENABLE2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripEnable2, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPPOINTLIMIT2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripPointLimit2, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPPOINTLIMIT2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripPointLimit2, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPSOURCEINDEX2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripSourceIndex2, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPSOURCEINDEX2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripSourceIndex2, POS := #tempDeSearializePos);
+	                #ACYCLIC_PERCENTAGEHIGHTRIPSOURCE2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.PercentageHighTripSource2, POS := #tempDeSearializePos);
+	                #ACYCLIC_PERCENTAGELOWTRIPSOURCE2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.PercentageLowTripSource2, POS := #tempDeSearializePos);
+	                #ACYCLIC_HIGHTRIPHYSTERESIS2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HighTripHysteresis2, POS := #tempDeSearializePos);
+	                #ACYCLIC_LOWTRIPHYSTERESIS2:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.LowTripHysteresis2, POS := #tempDeSearializePos);
+	                #ACYCLIC_TRIPPOINTOUTPUTALL:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.TripPointOutputAll, POS := #tempDeSearializePos);
+	                #ACYCLIC_GAUGEREADINGVALID:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.GaugeReadingValid, POS := #tempDeSearializePos);
+	                #ACYCLIC_GAUGEOVERRANGEEXCEEDED:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.GaugeOverrangeExceeded, POS := #tempDeSearializePos);
+	                #ACYCLIC_GAUGEUNDERRANGEEXCEEDED:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.GaugeUnderrangeExceeded, POS := #tempDeSearializePos);
+	                #ACYCLIC_GAUGEACTIVEVALUE:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.GaugeActiveValue, POS := #tempDeSearializePos);
+	                #ACYCLIC_GAUGEACTIVESENSORNUMBER:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.GaugeActiveSensorNumber, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEEXCEPTIONSTATUS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveExceptionStatus, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEMANUFACTURERWARNINGDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveManufacturerWarningDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEMANUFACTURERERRORDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveManufacturerErrorDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEGLOBALMANUFACTURERWARNINGDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveGlobalManufacturerWarningDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEGLOBALMANUFACTURERERRORDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveGlobalManufacturerErrorDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEGLOBALDEVICEWARNINGDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveGlobalDeviceWarningDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_ACTIVEGLOBALDEVICEERRORDETAILS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ActiveGlobalDeviceErrorDetails, POS := #tempDeSearializePos);
+	                #ACYCLIC_DATAUNIT:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.DataUnit, POS := #tempDeSearializePos);
+	                #ACYCLIC_SERIALNUMBERVPG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SerialNumberVPG, POS := #tempDeSearializePos);
+	                #ACYCLIC_MACADDRESS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData."Mac Address", POS := #tempDeSearializePos);
+	                #ACYCLIC_PASSWORD:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.Password, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWVERSIONCOMPLETEDEVICE:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWVersionCompleteDevice, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWVERSIONVPG:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWVersionVPG, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWVERSIONFIELDBUS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWVersionFieldbus, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWVERSIONNP40:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWVersionNP40, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWGITHASHFIELDBUS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWGitHashFieldbus, POS := #tempDeSearializePos);
+	                #ACYCLIC_SWGITHASHBLFIELDBUS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.SWGitHashBLFieldbus, POS := #tempDeSearializePos);
+	                #ACYCLIC_HWVERSIONFIELDBUS:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.HWVersionFieldbus, POS := #tempDeSearializePos);
+	                #ACYCLIC_DEVICETYPE:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.DeviceType, POS := #tempDeSearializePos);
+	                #ACYCLIC_FORMATFLASH:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FormatFlash, POS := #tempDeSearializePos);
+	                #ACYCLIC_ZEROADJUSTCOMMANDPIRANI:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ZeroAdjustCommandPirani, POS := #tempDeSearializePos);
+	                #ACYCLIC_ZEROADJUSTSTATUSPIRANI:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ZeroAdjustStatusPirani, POS := #tempDeSearializePos);
+	                #ACYCLIC_ZEROADJUSTRESPONSEPIRANI:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.ZeroAdjustResponsePirani, POS := #tempDeSearializePos);
+	                #ACYCLIC_FULLSCALEADJUSTCOMMANDPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FullScaleAdjustCommandPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_FULLSCALEADJUSTSTATUSPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FullScaleAdjustStatusPiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_FULLSCALEADJUSTRESPONSEPIEZO:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FullScaleAdjustResponsePiezo, POS := #tempDeSearializePos);
+	                #ACYCLIC_FULLSCALEADJUSTSTATUSPIRANI:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FullScaleAdjustStatusPirani, POS := #tempDeSearializePos);
+	                #ACYCLIC_FULLSCALEADJUSTRESPONSEPIRANI:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.FullScaleAdjustResponsePirani, POS := #tempDeSearializePos);
+	                #ACYCLIC_DEVICERESETCOMMAND:
+	                    #tempRetVal := Deserialize(SRC_ARRAY := #statRdRec.RdArray, DEST_VARIABLE => #SensorData.AcyclicReadData.DeviceResetCommand, POS := #tempDeSearializePos);
+	                    
+	            END_CASE;
+	            
+	        END_IF;
+	        
+	    END_REGION
+	    
+	END_REGION
+	
+	REGION WriteAcyclic
+	    
+	    #tempRetVal := GEO2LOG(GEOADDR := #statGeoAddr[2], LADDR => #statWrRec.cmdHwAdress);
+	    
+	    #instWrRec(REQ := #statWrRec.cmdRequest,
+	                ID := #statWrRec.cmdHwAdress,
+	                INDEX := #statWrRec.cmdIndex,
+	                LEN := #statWrRec.cmdSendLength,
+	                DONE => #statWrRec.stsDone,
+	                BUSY => #statWrRec.stsBusy,
+	                ERROR => #statWrRec.stsError,
+	                STATUS => #statWrRec.stsStatus,
+	                RECORD := #statWrRec.WrArray);
+	    
+	END_REGION
+	
+	
+	REGION ErrorHandling
+	    
+	    //Eror handling WrRec
+	    IF #statWrRec.stsError
+	        AND NOT #statFlag[1] THEN
+	        #statWrRec.stsSavedError := #statWrRec.stsStatus;
+	        #statWrRec.cmdRequest := FALSE;
+	        #errorDetail := #ERROR_WDREC;
+	        #error := TRUE;
+	    END_IF;
+	    #statFlag[1] := #statWrRec.stsError;
+	    
+	    
+	END_REGION ;
+	
+	REGION Flags
+	    IF #statStateAcyclic <> #STATE_WRITE_RESET
+	        AND NOT #DeviceReset
+	    THEN
+	        #statMemoryDone.writeDeviceReset := FALSE;
+	    END_IF;
+	    
+	    IF #statStateAcyclic <> #STATE_WRITE_FACTORYRESET
+	        AND NOT #FactoryReset
+	    THEN
+	        #statMemoryDone.writeFactoryReset := FALSE;
+	    END_IF;
+	    
+	    IF (#statStateAcyclic < #STATE_WRITE_ZEROADJUST_PIRANI
+	        OR #statStateAcyclic > #STATE_ANSWER_ZEROADJUST_PIRANI)
+	        AND NOT #ZeroAdjustPirani
+	    THEN
+	        #statMemoryDone.zeroAdjustPirani := FALSE;
+	    END_IF;
+	    
+	    IF (#statStateAcyclic < #STATE_WRITE_FULLSCALEADJUST_PIRANI
+	        OR #statStateAcyclic > #STATE_ANSWER_FULLSCALEADJUST_PIEZO)
+	        AND NOT #FullScaleAdjustPiezo
+	    THEN
+	        #statMemoryDone.fullScaleAdjustPirani := FALSE;
+	    END_IF;
+	    
+	    IF (#statStateAcyclic < #STATE_WRITE_FULLSCALEADJUST_PIEZO
+	        OR #statStateAcyclic > #STATE_ANSWER_FULLSCALEADJUST_PIEZO)
+	        AND NOT #FullScaleAdjustPiezo
+	    THEN
+	        #statMemoryDone.fullScaleAdjustPiezo := FALSE;
+	    END_IF;
+	    
+	END_REGION ;
+	
+	REGION WriteToOutputs
+	    #readAllParamDone := #statMemoryDone.readAllParam;
+	    #readSingleParamDone := #statMemoryDone.readSingleParam;
+	    #writeTripPoint1Done := #statMemoryDone.writeTripPoint1;
+	    #writeTripPoint2Done := #statMemoryDone.writeTripPoint2;
+	    #writeDataUnitDone := #statMemoryDone.writeDataUnit;
+	    #writeResetDone := #statMemoryDone.writeDeviceReset;
+	    #writeFactoryResetDone := #statMemoryDone.writeFactoryReset;
+	    #zeroAdjustPiraniDone := #statMemoryDone.zeroAdjustPirani;
+	    #fullScaleAdjustPiraniDone := #statMemoryDone.fullScaleAdjustPirani;
+	    #fullScaleAdjustPiezoDone := #statMemoryDone.fullScaleAdjustPiezo;
+	END_REGION ;
+	    
+	
+END_FUNCTION_BLOCK
+
